@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Easy Rent
 
 Rental marketplace: Next.js (App Router) + Supabase + Vercel.
@@ -99,3 +100,6 @@ psql -d t -f supabase/tests/mock_supabase.sql
 for f in supabase/migrations/2026092800{01,02,03,04,06,07,08}00_*.sql; do psql -d t -v ON_ERROR_STOP=1 -f "$f"; done
 python3 supabase/tests/scenario_test.py   # expects Postgres on socket /tmp, port 54329, db "t"
 ```
+=======
+# rent
+>>>>>>> 74f898dd9909ccdcdaf4348d56e1c3de9c103f02
