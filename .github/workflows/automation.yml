@@ -1,136 +1,195 @@
-name: Blueprint Enforcement & AI Automation Loop
+phase: 1
+description: >
+  Strict Phase‑1 blueprint for the RENT marketplace. This document defines
+  the complete set of allowed features, flows, tables, and rules for Phase‑1.
+  No Phase‑2 or Phase‑3 features may be implemented. Claude and all automation
+  must reject any request outside this specification.
 
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+# ---------------------------------------------------------
+# USERS & PROFILES
+# ---------------------------------------------------------
+profiles:
+  fields:
+    - id: uuid (PK)
+    - email: string
+    - full_name: string
+    - phone: string
+    - supplier_type: enum("individual", "business")
+    - business_name: string | null
+    - badge: enum("standard", "verified")  # manual admin toggle
+    - stripe_connect_id: string | null     # required before accepting bookings
+    - created_at: timestamp
+  rules:
+    - suppliers must be within 30-mile radius of Wichita, KS
+    - suppliers cannot accept bookings until Stripe Connect onboarding is complete
+    - phone number required for all suppliers
 
-jobs:
-  enforce-blueprint:
-    name: Validate Blueprint Compliance
-    runs-on: ubuntu-latest
+# ---------------------------------------------------------
+# LISTINGS
+# ---------------------------------------------------------
+listings:
+  fields:
+    - id: uuid (PK)
+    - owner_id: uuid (FK → profiles.id)
+    - title: string
+    - description: string
+    - condition: string
+    - accessories: string[]  # simple array of accessory names
+    - pickup_instructions: text
+    - return_instructions: text
+    - safety_notes: text
+    - price_per_day: numeric
+    - deposit_amount: numeric | null  # optional per listing
+    - photos: private_storage[]        # stored privately with signed URLs
+    - created_at: timestamp
+  rules:
+    - one listing = one physical item
+    - no quantity field
+    - no multi-location inventory
+    - photos must be private (signed URLs only)
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+# ---------------------------------------------------------
+# BOOKINGS
+# ---------------------------------------------------------
+bookings:
+  fields:
+    - id: uuid (PK)
+    - listing_id: uuid (FK → listings.id)
+    - renter_id: uuid (FK → profiles.id)
+    - owner_id: uuid (FK → profiles.id)
+    - start_date: date
+    - end_date: date
+    - status: enum(
+        "pending_approval",
+        "approved",
+        "pickup_confirmed",
+        "active",
+        "returned",
+        "inspection_window",
+        "claim_window",
+        "completed",
+        "cancelled"
+      )
+    - renter_fee: numeric  # always $5
+    - owner_commission_rate: numeric  # always 12%
+    - cancellation_fee: numeric | null
+    - created_at: timestamp
+  rules:
+    - manual approval only
+    - booking lifecycle must follow:
+      pending_approval → approved → pickup_confirmed → active → returned → inspection_window → claim_window → completed
+    - cancellation:
+      - full refund if cancelled ≥24 hours before pickup
+      - otherwise $5 cancellation fee
+    - booking cannot be approved unless owner has Stripe Connect onboarding completed
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+# ---------------------------------------------------------
+# INSPECTIONS
+# ---------------------------------------------------------
+inspections:
+  fields:
+    - id: uuid (PK)
+    - booking_id: uuid (FK → bookings.id)
+    - type: enum("before_pickup", "after_return")
+    - photos: private_storage[]
+    - notes: text
+    - accessories_present: string[]
+    - fuel_or_battery_level: string
+    - created_at: timestamp
+  rules:
+    - both inspections required for every booking
+    - photos must be private (signed URLs)
 
-      - name: Install dependencies
-        run: npm install
+# ---------------------------------------------------------
+# CLAIMS
+# ---------------------------------------------------------
+claims:
+  fields:
+    - id: uuid (PK)
+    - booking_id: uuid (FK → bookings.id)
+    - owner_id: uuid (FK → profiles.id)
+    - renter_id: uuid (FK → profiles.id)
+    - description: text
+    - photos: private_storage[]
+    - status: enum("filed", "renter_accepted", "renter_disputed", "approved", "rejected", "closed")
+    - created_at: timestamp
+  rules:
+    - owner files claim
+    - renter may accept or dispute
+    - platform admin decides disputed claims
+    - claim window = 24 hours after return
 
-      - name: Load blueprint spec
-        id: load_spec
-        run: |
-          echo "BLUEPRINT_SPEC<<EOF" >> $GITHUB_ENV
-          cat blueprint-spec.yml >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+# ---------------------------------------------------------
+# DEPOSITS & PAYMENTS
+# ---------------------------------------------------------
+deposits_payouts:
+  fields:
+    - id: uuid (PK)
+    - booking_id: uuid (FK → bookings.id)
+    - deposit_amount: numeric | null
+    - deposit_status: enum("held", "released", "applied")
+    - payout_amount: numeric
+    - payout_status: enum("pending", "paid")
+    - created_at: timestamp
+  rules:
+    - deposits optional per listing
+    - deposits must be charged (not held) and refunded later
+    - payout = (booking total - 12% commission)
+    - renter fee = $5 per booking
+    - payouts only occur after:
+      - inspection window closes
+      - claim window closes
+      - claim resolved (if any)
 
-      - name: Run compliance engine
-        id: compliance
-        run: |
-          node scripts/compliance-checker.js
+# ---------------------------------------------------------
+# PROHIBITED ITEMS
+# ---------------------------------------------------------
+prohibited_items:
+  rules:
+    - must match company blueprint list exactly
+    - suppliers listing prohibited items must be suspended
 
-      - name: Fail if non-compliant
-        if: failure()
-        run: |
-          echo "❌ Blueprint violation detected. Commit rejected."
-          exit 1
+# ---------------------------------------------------------
+# SUSPENSIONS & AUDIT LOGS
+# ---------------------------------------------------------
+suspensions:
+  fields:
+    - id: uuid (PK)
+    - profile_id: uuid (FK → profiles.id)
+    - reason: text
+    - created_at: timestamp
 
-  generate-code:
-    name: Claude Code Generation (Blueprint Locked)
-    needs: enforce-blueprint
-    runs-on: ubuntu-latest
-    if: success()
+audit_logs:
+  fields:
+    - id: uuid (PK)
+    - actor_id: uuid (FK → profiles.id | admin)
+    - action: string
+    - target_id: uuid | null
+    - details: jsonb
+    - created_at: timestamp
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+# ---------------------------------------------------------
+# STORAGE RULES
+# ---------------------------------------------------------
+storage:
+  rules:
+    - all photos (listings, inspections, claims) must be private
+    - access only via temporary signed URLs
 
-      - name: Claude Codegen
-        id: claude_codegen
-        env:
-          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
-        run: |
-          echo "🚀 Sending blueprint + repo context to Claude..."
-
-          curl https://api.anthropic.com/v1/messages \
-            -H "x-api-key: $CLAUDE_API_KEY" \
-            -H "content-type: application/json" \
-            -d "{
-              \"model\": \"claude-3-5-sonnet-20240620\",
-              \"max_tokens\": 4096,
-              \"temperature\": 0,
-              \"system\": \"You are the code-generation engine for the RENT marketplace. You must follow the blueprint-spec.yml EXACTLY, with zero deviation, zero reinterpretation, and zero introduction of features not explicitly allowed in Phase 1. If any requested change violates the blueprint, you MUST refuse and explain which rule is being violated. You may ONLY generate Phase 1 features: one listing = one physical item, manual booking approval, optional deposits, platform-wide cancellation rules, no quantity support, no multilocation inventory, no staff accounts, no insurance, no delivery, no business verification, no subscription plans, no advanced fraud controls. All booking, inspection, claim, payout, and money-flow logic MUST match the blueprint. All database schema MUST match the blueprint. All RLS policies MUST be present and strict. All prohibited items MUST match the blueprint. You MUST NOT invent new tables, flows, or features unless the blueprint explicitly allows them. You MUST NOT modify the money flow, deposit logic, inspection logic, claim logic, or payout timing. You MUST NOT generate Phase 2 features under any circumstances. If any requested change violates the blueprint, respond with: 'This change violates the blueprint-spec.yml because: [reason]. I cannot generate this.' If the request is compliant, generate clean, modular, blueprint-aligned code compatible with Next.js, Supabase, Stripe, and Phase 1 constraints. You MUST always read blueprint-spec.yml before generating code.\",
-              \"messages\": [
-                {
-                  \"role\": \"user\",
-                  \"content\": \"Here is the repository context and blueprint. Generate ONLY blueprint-compliant code. Reject everything else.\\n\\n--- BLUEPRINT SPEC ---\\n$(cat blueprint-spec.yml)\\n\\n--- REPO FILES ---\\n$(ls -R .)\"
-                }
-              ]
-            }" > claude_output.txt
-
-          echo "Claude output saved to claude_output.txt"
-
-      - name: Apply Claude changes
-        run: |
-          if [ -s claude_output.txt ]; then
-            echo "Applying Claude-generated code..."
-            # Claude output is expected to contain patch-like content
-            # You may adjust this depending on your Claude output format
-            git apply claude_output.txt || echo "⚠️ No patch applied"
-          else
-            echo "⚠️ Claude output was empty"
-          fi
-
-      - name: Commit generated code
-        run: |
-          git config user.name "AI-Automation"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "AI: Blueprint-compliant code update" || echo "No changes to commit"
-
-      - name: Push changes
-        run: |
-          git push
-
-  supabase-validate:
-    name: Supabase Schema Validation
-    needs: generate-code
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Validate schema against blueprint
-        run: |
-          node scripts/supabase-schema-check.js
-
-      - name: Fail if schema mismatch
-        if: failure()
-        run: |
-          echo "❌ Supabase schema violates blueprint-spec.yml"
-          exit 1
-
-  deploy-vercel:
-    name: Vercel Deployment Gate
-    needs: supabase-validate
-    runs-on: ubuntu-latest
-    if: success()
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          echo "🚀 Deploying only because blueprint compliance passed."
-          npx vercel --prod --token=$VERCEL_TOKEN
+# ---------------------------------------------------------
+# PHASE‑1 EXPLICITLY FORBIDDEN FEATURES
+# ---------------------------------------------------------
+forbidden:
+  - quantity fields
+  - multi-location inventory
+  - staff accounts
+  - delivery options
+  - business verification
+  - subscription plans
+  - advanced fraud controls
+  - messaging system
+  - categories
+  - availability calendars
+  - reviews/trust signals
+  - admin dashboards beyond minimal claim resolution
+  - any new tables not listed above
