@@ -1,0 +1,220 @@
+company:
+  working_name: null
+  founder:
+    name: "Reynolds Gardner"
+    ownership_percent: 100
+  version: "1"
+  description: "A peer-to-peer equipment rental marketplace that connects equipment owners with people who need affordable, convenient short-term rentals."
+
+phase:
+  current: "phase_1"
+  geography:
+    launch_radius_miles: 30
+    core_towns:
+      - "Belle Plaine"
+      - "Mulvane"
+      - "Udall"
+      - "Derby"
+      - "Wellington"
+      - "Winfield"
+
+marketplace:
+  supplier_types:
+    - "individual"
+    - "small_company"
+  responsibilities:
+    supplier:
+      - "list_equipment"
+      - "maintain_descriptions"
+      - "set_rental_price"
+      - "set_deposit_amount_optional"
+      - "manage_availability"
+      - "approve_or_decline_bookings"
+      - "handle_pickup_return"
+      - "perform_inspections_before_after"
+      - "submit_claims"
+      - "provide_claim_evidence"
+      - "communicate_via_messaging"
+      - "keep_items_safe_legal_functional"
+    renter:
+      - "provide_accurate_profile"
+      - "maintain_payment_method"
+      - "pay_rental_deposit_taxes_platform_fee"
+      - "understand_rules_before_booking"
+      - "follow_pickup_return_instructions"
+      - "use_equipment_safely_legally"
+      - "report_damage_malfunctions_loss_unsafe_conditions"
+      - "communicate_via_messaging"
+      - "avoid_cancellations_noshows_late_returns_misuse_disputes"
+    platform:
+      - "control_booking_experience"
+      - "facilitate_secure_payments"
+      - "facilitate_owner_payouts"
+      - "enforce_cancellation_policies"
+      - "enforce_deposit_rules"
+      - "provide_messaging_system"
+      - "provide_inspection_workflow"
+      - "provide_claims_workflow"
+      - "provide_dispute_resolution"
+      - "provide_customer_support"
+      - "maintain_fraud_detection_safety"
+      - "maintain_rules_prohibited_items"
+      - "maintain_identity_verification_future"
+      - "maintain_business_verification_future"
+      - "maintain_insurance_integrations_future"
+
+money_flow:
+  booking_request:
+    moves_money: false
+    steps:
+      - "renter_submits_booking_request"
+      - "owner_approves_or_declines"
+      - "platform_shows_total_cost"
+    total_cost_components:
+      - "rental_price"
+      - "deposit_optional"
+      - "platform_fee_renter_side"
+      - "taxes_optional"
+  payment_at_booking:
+    trigger: "owner_approval"
+    renter_pays:
+      - "rental_price"
+      - "deposit_held_not_paid_out"
+      - "platform_fee_nonrefundable"
+    platform_actions:
+      - "hold_deposit_escrow_like"
+      - "allocate_rental_to_future_payout"
+      - "record_platform_fee_as_revenue"
+    owner_view:
+      - "pending_payout"
+      - "deposit_held"
+  pickup:
+    moves_money: false
+    effects:
+      - "before_pickup_inspection_optional"
+      - "renter_confirms_pickup"
+      - "booking_becomes_active"
+  return:
+    moves_money: false
+    owner_actions:
+      - "after_return_inspection"
+      - "note_damage_or_missing_accessories"
+      - "decide_open_claim"
+  no_claim:
+    deposit_action: "release_to_renter"
+    owner_payout: "rental_price_minus_platform_commission"
+    platform_keeps:
+      - "platform_fee"
+      - "commission"
+  claim_flow:
+    submission:
+      - "owner_submits_description_evidence_repair_estimate_optional"
+    renter_response:
+      - "accept"
+      - "dispute"
+      - "provide_counterevidence"
+    platform_review_phase_1: "optional"
+    resolution_states:
+      - "approved"
+      - "rejected"
+      - "closed"
+    deposit_usage:
+      approved:
+        - "apply_partial_or_full_deposit_to_damage"
+      rejected:
+        - "return_deposit_to_renter"
+  payout_timing:
+    default_window_hours: 24
+    max_window_hours: 48
+    rules:
+      - "payout_after_return_inspection_claim_window_close"
+      - "payout_immediate_if_no_deposit"
+
+software_architecture:
+  stack:
+    frontend: "Next.js_React_on_Vercel"
+    backend: "Next.js_API_routes_or_server_components"
+    database: "Supabase_Postgres"
+    auth: "Supabase_Auth"
+    payments: "Stripe_or_equivalent"
+  core_tables:
+    - "profiles"
+    - "listings"
+    - "bookings"
+    - "inspections"
+    - "claims"
+    - "deposits_payouts"
+  key_rules:
+    - "one_listing_equals_one_physical_item"
+    - "supplier_type_on_profiles"
+    - "same_flow_for_individual_and_small_company"
+    - "no_quantity_support_phase_1"
+    - "no_multilocation_phase_1"
+    - "no_staff_accounts_phase_1"
+  security:
+    rls:
+      profiles: "strict"
+      listings: "strict"
+      bookings: "strict"
+      inspections: "strict"
+      claims: "strict"
+    visibility:
+      owner_can_see: ["own_listings", "own_bookings", "own_inspections", "own_claims"]
+      renter_can_see: ["own_bookings", "own_inspections", "own_claims"]
+      admin_future: "full_access_for_moderation"
+
+prohibited_items:
+  list:
+    - "weapons"
+    - "ammunition"
+    - "explosives"
+    - "hazardous_chemicals"
+    - "medical_devices"
+    - "drugs_or_paraphernalia"
+    - "animals"
+    - "registered_vehicles"
+    - "anything_illegal_state_or_federal"
+
+phase_1_constraints:
+  listings:
+    quantity_support: false
+    multilocation_support: false
+    staff_accounts: false
+  booking:
+    approval_method: "manual_only"
+  cancellation_policy:
+    model: "platform_global_rules"
+  deposits:
+    model: "optional_per_listing"
+  verification:
+    owner_small_company: "light_verification"
+    renter: "email_plus_phone"
+
+launch_plan:
+  mvp_gate:
+    must_have:
+      - "profiles_supplier_type_business_name"
+      - "listings_module"
+      - "booking_engine"
+      - "payments_deposits"
+      - "inspections_before_after"
+      - "claims_system"
+      - "messaging"
+      - "search_discovery"
+      - "validated_rls"
+      - "private_storage_buckets"
+      - "stripe_keys_secured"
+      - "20_30_simulated_rentals"
+      - "10_simulated_claims"
+      - "10_simulated_disputes"
+  soft_launch_gate:
+    supply_min_owners: 10
+    supply_min_listings: 30
+    demand_min_renters: 50
+  public_launch_gate:
+    real_bookings_min: 20
+    claim_frequency_max_percent: 10
+    dispute_rate_max_percent: 5
+    fraud_max_percent: 1
+    owner_response_time_max_hours: 12
+    booking_completion_min_percent: 80
