@@ -1,0 +1,104 @@
+name: Blueprint Enforcement & AI Automation Loop
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  enforce-blueprint:
+    name: Validate Blueprint Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Load blueprint spec
+        id: load_spec
+        run: |
+          echo "BLUEPRINT_SPEC<<EOF" >> $GITHUB_ENV
+          cat blueprint-spec.yml >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Run compliance engine
+        id: compliance
+        run: |
+          node scripts/compliance-checker.js
+
+      - name: Fail if non-compliant
+        if: failure()
+        run: |
+          echo "❌ Blueprint violation detected. Commit rejected."
+          exit 1
+
+  generate-code:
+    name: Claude Code Generation (Blueprint Locked)
+    needs: enforce-blueprint
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Claude Codegen
+        id: claude_codegen
+        run: |
+          echo "Sending architecture + blueprint-spec.yml to Claude..."
+          # Claude API call goes here
+
+      - name: Commit generated code
+        run: |
+          git config user.name "AI-Automation"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "AI: Blueprint-compliant code update" || echo "No changes to commit"
+
+      - name: Push changes
+        run: |
+          git push
+
+  supabase-validate:
+    name: Supabase Schema Validation
+    needs: generate-code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate schema against blueprint
+        run: |
+          node scripts/supabase-schema-check.js
+
+      - name: Fail if schema mismatch
+        if: failure()
+        run: |
+          echo "❌ Supabase schema violates blueprint-spec.yml"
+          exit 1
+
+  deploy-vercel:
+    name: Vercel Deployment Gate
+    needs: supabase-validate
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        run: |
+          echo "Deploying only because blueprint compliance passed."
+          # Vercel CLI deploy command here
