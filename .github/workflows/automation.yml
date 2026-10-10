@@ -54,9 +54,39 @@ jobs:
 
       - name: Claude Codegen
         id: claude_codegen
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
         run: |
-          echo "Sending architecture + blueprint-spec.yml to Claude..."
-          # Claude API call goes here
+          echo "🚀 Sending blueprint + repo context to Claude..."
+
+          curl https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $CLAUDE_API_KEY" \
+            -H "content-type: application/json" \
+            -d "{
+              \"model\": \"claude-3-5-sonnet-20240620\",
+              \"max_tokens\": 4096,
+              \"temperature\": 0,
+              \"system\": \"You are the code-generation engine for the RENT marketplace. You must follow the blueprint-spec.yml EXACTLY, with zero deviation, zero reinterpretation, and zero introduction of features not explicitly allowed in Phase 1. If any requested change violates the blueprint, you MUST refuse and explain which rule is being violated. You may ONLY generate Phase 1 features: one listing = one physical item, manual booking approval, optional deposits, platform-wide cancellation rules, no quantity support, no multilocation inventory, no staff accounts, no insurance, no delivery, no business verification, no subscription plans, no advanced fraud controls. All booking, inspection, claim, payout, and money-flow logic MUST match the blueprint. All database schema MUST match the blueprint. All RLS policies MUST be present and strict. All prohibited items MUST match the blueprint. You MUST NOT invent new tables, flows, or features unless the blueprint explicitly allows them. You MUST NOT modify the money flow, deposit logic, inspection logic, claim logic, or payout timing. You MUST NOT generate Phase 2 features under any circumstances. If any requested change violates the blueprint, respond with: 'This change violates the blueprint-spec.yml because: [reason]. I cannot generate this.' If the request is compliant, generate clean, modular, blueprint-aligned code compatible with Next.js, Supabase, Stripe, and Phase 1 constraints. You MUST always read blueprint-spec.yml before generating code.\",
+              \"messages\": [
+                {
+                  \"role\": \"user\",
+                  \"content\": \"Here is the repository context and blueprint. Generate ONLY blueprint-compliant code. Reject everything else.\\n\\n--- BLUEPRINT SPEC ---\\n$(cat blueprint-spec.yml)\\n\\n--- REPO FILES ---\\n$(ls -R .)\"
+                }
+              ]
+            }" > claude_output.txt
+
+          echo "Claude output saved to claude_output.txt"
+
+      - name: Apply Claude changes
+        run: |
+          if [ -s claude_output.txt ]; then
+            echo "Applying Claude-generated code..."
+            # Claude output is expected to contain patch-like content
+            # You may adjust this depending on your Claude output format
+            git apply claude_output.txt || echo "⚠️ No patch applied"
+          else
+            echo "⚠️ Claude output was empty"
+          fi
 
       - name: Commit generated code
         run: |
@@ -99,22 +129,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Vercel
-      curl https://api.anthropic.com/v1/messages \
-  -H "x-api-key: $CLAUDE_API_KEY" \
-  -H "content-type: application/json" \
-  -d "{
-    \"model\": \"claude-3-5-sonnet-20240620\",
-    \"max_tokens\": 4096,
-    \"temperature\": 0,
-    \"system\": \"You are the code-generation engine for the RENT marketplace. You must follow the blueprint-spec.yml EXACTLY, with zero deviation, zero reinterpretation, and zero introduction of features not explicitly allowed in Phase 1. If any requested change violates the blueprint, you MUST refuse and explain which rule is being violated. You may ONLY generate Phase 1 features: one listing = one physical item, manual booking approval, optional deposits, platform-wide cancellation rules, no quantity support, no multilocation inventory, no staff accounts, no insurance, no delivery, no business verification, no subscription plans, no advanced fraud controls. All booking, inspection, claim, payout, and money-flow logic MUST match the blueprint. All database schema MUST match the blueprint. All RLS policies MUST be present and strict. All prohibited items MUST match the blueprint. You MUST NOT invent new tables, flows, or features unless the blueprint explicitly allows them. You MUST NOT modify the money flow, deposit logic, inspection logic, claim logic, or payout timing. You MUST NOT generate Phase 2 features under any circumstances. If any requested change violates the blueprint, respond with: 'This change violates the blueprint-spec.yml because: [reason]. I cannot generate this.' If the request is compliant, generate clean, modular, blueprint-aligned code compatible with Next.js, Supabase, Stripe, and Phase 1 constraints. You MUST always read blueprint-spec.yml before generating code.\",
-    \"messages\": [
-      {
-        \"role\": \"user\",
-        \"content\": \"Here is the repository context and blueprint. Generate ONLY blueprint-compliant code. Reject everything else.\\n\\n--- BLUEPRINT SPEC ---\\n$(cat blueprint-spec.yml)\\n\\n--- REPO FILES ---\\n$(ls -R .)\"
-      }
-    ]
-  }"
-
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "Deploying only because blueprint compliance passed."
-          # Vercel CLI deploy command here
+          echo "🚀 Deploying only because blueprint compliance passed."
+          npx vercel --prod --token=$VERCEL_TOKEN
