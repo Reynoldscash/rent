@@ -1,0 +1,232 @@
+diff --git a/app/(components)/bookings/BookingCard.tsx b/app/(components)/bookings/BookingCard.tsx
+new file mode 100644
+index 0000000..e395183
+--- /dev/null
++++ b/app/(components)/bookings/BookingCard.tsx
+@@ -0,0 +1,3 @@
++export default function BookingCard() {
++  return <div>BookingCard</div>;
++}
+diff --git a/app/(components)/bookings/BookingLifecycle.tsx b/app/(components)/bookings/BookingLifecycle.tsx
+new file mode 100644
+index 0000000..3079b41
+--- /dev/null
++++ b/app/(components)/bookings/BookingLifecycle.tsx
+@@ -0,0 +1,3 @@
++export default function BookingLifecycle() {
++  return <div>BookingLifecycle</div>;
++}
+diff --git a/app/(components)/claims/ClaimForm.tsx b/app/(components)/claims/ClaimForm.tsx
+new file mode 100644
+index 0000000..192cb5f
+--- /dev/null
++++ b/app/(components)/claims/ClaimForm.tsx
+@@ -0,0 +1,3 @@
++export default function ClaimForm() {
++  return <div>ClaimForm</div>;
++}
+diff --git a/app/(components)/inspections/InspectionForm.tsx b/app/(components)/inspections/InspectionForm.tsx
+new file mode 100644
+index 0000000..f01c1d7
+--- /dev/null
++++ b/app/(components)/inspections/InspectionForm.tsx
+@@ -0,0 +1,3 @@
++export default function InspectionForm() {
++  return <div>InspectionForm</div>;
++}
+diff --git a/app/api/bookings/pickup-confirm/route.ts b/app/api/bookings/pickup-confirm/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/bookings/pickup-confirm/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/bookings/return/route.ts b/app/api/bookings/return/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/bookings/return/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/claims/file/route.ts b/app/api/claims/file/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/claims/file/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/claims/resolve/route.ts b/app/api/claims/resolve/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/claims/resolve/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/claims/respond/route.ts b/app/api/claims/respond/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/claims/respond/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/inspections/create/route.ts b/app/api/inspections/create/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/inspections/create/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/payments/create-deposit/route.ts b/app/api/payments/create-deposit/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/payments/create-deposit/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/payments/create-payout/route.ts b/app/api/payments/create-payout/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/payments/create-payout/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/payments/refund-deposit/route.ts b/app/api/payments/refund-deposit/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/payments/refund-deposit/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/profiles/update/route.ts b/app/api/profiles/update/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/profiles/update/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/stripe/callback/route.ts b/app/api/stripe/callback/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/stripe/callback/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/app/api/stripe/onboard/route.ts b/app/api/stripe/onboard/route.ts
+new file mode 100644
+index 0000000..51fa09f
+--- /dev/null
++++ b/app/api/stripe/onboard/route.ts
+@@ -0,0 +1,7 @@
++export async function POST() {
++  return new Response("Not Implemented", { status: 501 });
++}
++
++export async function GET() {
++  return new Response("Not Implemented", { status: 501 });
++}
+diff --git a/lib/auth/getUser.ts b/lib/auth/getUser.ts
+new file mode 100644
+index 0000000..e5d242e
+--- /dev/null
++++ b/lib/auth/getUser.ts
+@@ -0,0 +1,7 @@
++import { createClient } from "@/lib/supabase/server";
++
++export async function getUser() {
++  const supabase = await createClient();
++  const { data } = await supabase.auth.getUser();
++  return data.user;
++}
+diff --git a/lib/storage/getSignedUrl.ts b/lib/storage/getSignedUrl.ts
+new file mode 100644
+index 0000000..0394d78
+--- /dev/null
++++ b/lib/storage/getSignedUrl.ts
+@@ -0,0 +1,6 @@
++import { createClient } from "@/lib/supabase/server";
++
++export async function getSignedUrl(bucket: string, path: string, expiresInSeconds = 60) {
++  const supabase = await createClient();
++  return supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
++}
+diff --git a/lib/storage/uploadPrivate.ts b/lib/storage/uploadPrivate.ts
+new file mode 100644
+index 0000000..bc8a79b
+--- /dev/null
++++ b/lib/storage/uploadPrivate.ts
+@@ -0,0 +1,9 @@
++import { createClient } from "@/lib/supabase/server";
++
++export async function uploadPrivate(bucket: string, path: string, file: File) {
++  const supabase = await createClient();
++  return supabase.storage.from(bucket).upload(path, file, {
++    contentType: file.type,
++    upsert: false,
++  });
++}

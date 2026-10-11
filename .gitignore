@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 node_modules
 .next
 out
@@ -152,4 +152,4 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
->>>>>>> 74f898dd9909ccdcdaf4348d56e1c3de9c103f02
+

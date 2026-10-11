@@ -101,7 +101,7 @@ for f in supabase/migrations/2026092800{01,02,03,04,06,07,08}00_*.sql; do psql -
 python3 supabase/tests/scenario_test.py   # expects Postgres on socket /tmp, port 54329, db "t"
 ```
 =
-Deployment test======
+Deployment test2======
 # rent
 >>>>>>> 74f898dd9909ccdcdaf4348d56e1c3de9c103f02
 Deployment test
