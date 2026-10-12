@@ -324,3 +324,57 @@ Claude must now use this schema to:
 - generate payment flow
 
 All sensitive fields (status, total_price, owner_id, approved_at, is_verified) must be protected by RLS and triggers so clients cannot set them directly.
+# Database Schema (Updated)
+
+## Supplier Tiers
+Enum: supplier_tier
+- individual
+- small_company
+- large_company
+
+users table:
+- supplier_type (supplier_tier)
+- company_name (text)
+
+## Inspections
+inspections table:
+- id (uuid)
+- booking_id (uuid → bookings)
+- user_id (uuid → users)
+- inspection_type ('before' | 'after')
+- walkaround_video_url (text)
+- serial_number (text)
+- fuel_level (numeric)
+- battery_level (numeric)
+- accessories (text[])
+- mileage_hours (numeric)
+- condition_notes (text)
+- created_at (timestamp)
+
+## Claims
+claims table:
+- id (uuid)
+- booking_id (uuid → bookings)
+- owner_id (uuid → users)
+- renter_id (uuid → users)
+- status (text enum)
+- description (text)
+- evidence_urls (text[])
+- repair_estimate (numeric)
+- created_at (timestamp)
+- updated_at (timestamp)
+
+## Company Locations
+company_locations table:
+- id (uuid)
+- company_id (uuid → users)
+- name (text)
+- address (text)
+- city (text)
+- state (text)
+- zip (text)
+- created_at (timestamp)
+
+## Listings
+listings table:
+- location_id (uuid → company_locations)
