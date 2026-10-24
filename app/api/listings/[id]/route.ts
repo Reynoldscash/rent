@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   if (auth.response) return auth.response;
 
   const parsed = parseListingInput(await readJson(request), "update");
-  if (parsed.error) return jsonError(parsed.error);
+  if (parsed.error !== undefined) return jsonError(parsed.error);
 
   const { data, error } = await auth.supabase
     .from("listings")

@@ -13,7 +13,7 @@ export function PayButton({ bookingId, label }: { bookingId: string; label: stri
     setBusy(true);
     setError(null);
     const res = await callApi<{ url: string }>(`/api/bookings/${bookingId}/pay`, "POST");
-    if (res.error) {
+    if (res.error !== undefined) {
       setBusy(false);
       setError(res.error === "Payment window closed" ? "The payment window for this booking has closed." : res.error);
       return;
