@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   const parsed = parseListingInput(await readJson(request), "create");
-  if (parsed.error) return jsonError(parsed.error);
+  if (parsed.error !== undefined) return jsonError(parsed.error);
 
   const { data, error } = await supabase.from("listings").insert(parsed.value).select("*").single();
   if (error) return dbError(error);

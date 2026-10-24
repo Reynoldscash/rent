@@ -50,7 +50,7 @@ export function ListingForm({ mode, categories, initial, listingId }: Props) {
     if (mode === "create") {
       const res = await callApi<{ id: string }>("/api/listings", "POST", payload);
       setBusy(false);
-      if (res.error) return setError(res.error);
+      if (res.error !== undefined) return setError(res.error);
       router.push(`/dashboard/listings/${res.data.id}?created=1`);
     } else {
       const res = await callApi(`/api/listings/${listingId}`, "PATCH", payload);
